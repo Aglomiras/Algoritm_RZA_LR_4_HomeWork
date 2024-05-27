@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<cfg>
+    <LogicalNodes>
+        <logicNodeSPTOC>
+            <logicNodePTOC>
+                <nameLogic>PTOC1</nameLogic>
+                <parametrs>
+                    <current>2544.0</current>
+                    <timeDelay>0</timeDelay>
+                    <timeMult>0.25</timeMult>
+                </parametrs>
+            </logicNodePTOC>
+            <logicNodePTOC>
+                <nameLogic>PTOC2</nameLogic>
+                <parametrs>
+                    <current>833.3</current>
+                    <timeDelay>120</timeDelay>
+                    <timeMult>0.25</timeMult>
+                </parametrs>
+            </logicNodePTOC>
+            <logicNodePTOC>
+                <nameLogic>PTOC3</nameLogic>
+                <parametrs>
+                    <current>420</current>
+                    <timeDelay>240</timeDelay>
+                    <timeMult>0.25</timeMult>
+                </parametrs>
+            </logicNodePTOC>
+        </logicNodeSPTOC>
+
+        <logicNodeSMMXU>
+            <logicNodeMMXU>
+                <nameLogic>MMXU</nameLogic>
+            </logicNodeMMXU>
+        </logicNodeSMMXU>
+
+        <logicNodeSCSWI>
+            <logicNodeCSWI>
+                <nameLogic>CSWI</nameLogic>
+            </logicNodeCSWI>
+        </logicNodeSCSWI>
+
+        <logicNodeSXCBR>
+            <logicNodeXCBR>
+                <nameLogic>XCBR</nameLogic>
+            </logicNodeXCBR>
+        </logicNodeSXCBR>
+
+        <logicNodeSLSVS>
+            <logicNodeLSVS>
+                <nameLogic>LSVS</nameLogic>
+                <path>C:\\Users\\Aglomiras\\Изображения\\Рабочий стол\\AlgoritmRZAProgrammRealize\\Начало линии\\</path>
+                <namePath>PhA80</namePath>
+            </logicNodeLSVS>
+        </logicNodeSLSVS>
+
+    </LogicalNodes>
+</cfg>
