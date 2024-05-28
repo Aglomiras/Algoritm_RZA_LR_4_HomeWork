@@ -2,15 +2,14 @@ package org.example.iec61850.lodicalNodes.measurement;
 
 import lombok.Getter;
 import lombok.Setter;
-import org.example.iec61850.Filter.Filter;
-import org.example.iec61850.Filter.Fourier;
-import org.example.iec61850.common.modelData.Vector;
+import org.example.iec61850.Filter.FilterDiff;
+import org.example.iec61850.Filter.FourierFilter;
 import org.example.iec61850.lodicalNodes.LN;
-import org.example.iec61850.node_parameters.DataObject.CMV;
 import org.example.iec61850.node_parameters.DataObject.measured_and_metered_values.DEL;
 import org.example.iec61850.node_parameters.DataObject.measured_and_metered_values.MV;
 import org.example.iec61850.node_parameters.DataObject.measured_and_metered_values.WYE;
-import org.example.iec61850.node_parameters.DataObject.settings.ENG;
+
+import static java.lang.Math.abs;
 
 @Getter
 @Setter
@@ -35,134 +34,86 @@ public class MMXU extends LN {
      * Measured and metered values
      */
     private MV TotW = new MV();
-    private MV TotWVAr = new MV();
+    private MV TotVAr = new MV();
     private MV TotVA = new MV();
     private MV TotPF = new MV();
-    private MV Hz = new MV();
+    public MV Hz = new MV();
     private DEL PPV = new DEL();
-    private WYE PhV = new WYE();
+    public WYE PNV = new WYE();
+    public WYE PhV = new WYE();
 
+    public WYE Ann = new WYE();
+    public WYE Avn = new WYE();
+
+    public WYE A = new WYE();
     private WYE W = new WYE();
     private WYE VAr = new WYE();
     private WYE VA = new WYE();
     private WYE PF = new WYE();
-    private WYE Z = new WYE();
-    private MV AvAPhs = new MV();
-    private MV AvPPVPhs = new MV();
-    private MV AvPhVPhs = new MV();
-    private MV AvWPhs = new MV();
-    private MV AvVAPhs = new MV();
-    private MV AvVArPhs = new MV();
-    private MV AvPFPhs = new MV();
-    private MV AvZPhs = new MV();
-    private MV MaxAPhs = new MV();
-    private MV MaxPPVPhs = new MV();
-    private MV MaxPhVPhs = new MV();
-    private MV MaxWPhs = new MV();
-    private MV MaxVAPhs = new MV();
-    private MV MaxVArPhs = new MV();
-    private MV MaxPFPhs = new MV();
-    private MV MaxZPPhs = new MV();
-    private MV MinAPhs = new MV();
-    private MV MinPPVPhs = new MV();
-    private MV MinPhVPhs = new MV();
-    private MV MinWPhs = new MV();
-    private MV MinVAPhs = new MV();
-    private MV MinVArPhs = new MV();
-    private MV MinPFPhs = new MV();
-    private MV MinZPPhs = new MV();
-    /**
-     * Setting
-     */
-    private ENG ClcTotVA = new ENG();
-    private ENG PFSign = new ENG();
+    public WYE Z = new WYE();
+
+    private double dt = 0.00025; // ms = 0.02/80
+    private int cntTime = 0;
+    private double[] previous = {0, 0};
+    private double[] prevTime = {0, 0};
+    private double[] zeroTime = {0, 0};
+    boolean isFirst = true;
+
 
     /**
-     * Size buffer
+     * input
      */
-    public static int bufSize = 80;
-    /**
-     * Input
-     */
-    public MV IaInst = new MV();
-    public MV IbInst = new MV();
-    public MV IcInst = new MV();
-    public MV UaInst = new MV();
-    public MV UbInst = new MV();
-    public MV UcInst = new MV();
+    public MV iAnnInst = new MV();
+    public MV iBnnInst = new MV();
+    public MV iCnnInst = new MV();
+    public MV iAvnInst = new MV();
+    public MV iBvnInst = new MV();
+    public MV iCvnInst = new MV();
 
-    /**
-     * Output
-     */
-    private WYE A = new WYE();
-    private WYE PNV = new WYE();
-    /**
-     * Filter (буферы на каждую фазу тока и напряжения)
-     */
-    public final Filter ia = new Fourier(bufSize);
-    public final Filter ib = new Fourier(bufSize);
-    public final Filter ic = new Fourier(bufSize);
-    public final Filter ua = new Fourier(bufSize);
-    public final Filter ub = new Fourier(bufSize);
-    public final Filter uc = new Fourier(bufSize);
+    private int bufSize = 80;
+    //ВН
+    private final FilterDiff I_Avn = new FourierFilter(bufSize, 50.0);
+    private final FilterDiff I_Bvn = new FourierFilter(bufSize, 50.0);
+    private final FilterDiff I_Cvn = new FourierFilter(bufSize, 50.0);
+    //НН
+    private final FilterDiff I_Ann = new FourierFilter(bufSize, 50.0);
+    private final FilterDiff I_Bnn = new FourierFilter(bufSize, 50.0);
+    private final FilterDiff I_Cnn = new FourierFilter(bufSize, 50.0);
 
     @Override
     public void process() {
-        this.ia.process(this.IaInst, this.A.getPhsA());
-        this.ib.process(this.IbInst, this.A.getPhsB());
-        this.ic.process(this.IcInst, this.A.getPhsC());
+        freqMeasur(Hz);
 
-        this.ua.process(this.UaInst, this.PNV.getPhsA());
-        this.ub.process(this.UbInst, this.PNV.getPhsB());
-        this.uc.process(this.UcInst, this.PNV.getPhsC());
-
-        /**Расчет междуфазных векторов*/
-        Vector valAB = resultVector(this.PNV.getPhsA(), this.PNV.getPhsB());
-        Vector valBC = resultVector(this.PNV.getPhsB(), this.PNV.getPhsC());
-        Vector valCA = resultVector(this.PNV.getPhsC(), this.PNV.getPhsA());
-
-        this.PPV.getPhsAB().setInstCVal(valAB);
-        this.PPV.getPhsBC().setInstCVal(valBC);
-        this.PPV.getPhsCA().setInstCVal(valCA);
+        I_Ann.process(iAnnInst, Ann.getPhsA(), bufSize, Hz);
+        I_Avn.process(iAvnInst, Avn.getPhsA(), bufSize, Hz);
+        I_Bnn.process(iBnnInst, Ann.getPhsB(), bufSize, Hz);
+        I_Bvn.process(iBvnInst, Avn.getPhsB(), bufSize, Hz);
+        I_Cnn.process(iCnnInst, Ann.getPhsC(), bufSize, Hz);
+        I_Cvn.process(iCvnInst, Avn.getPhsC(), bufSize, Hz);
     }
 
-    /**
-     * Возвращает длину и фазу междуфазного вектора
-     */
-    public Vector resultVector(CMV valFirst, CMV valSecond) {
-        double[] valFir = vectorRotation(valFirst, 0);
-        double[] valSec = vectorRotation(valSecond, 180);
+    private void freqMeasur(MV Hz) {
+        cntTime++;
+        previous[1] = previous[0];
+        previous[0] = iAvnInst.getInstMag().getFloatVal().getValue();
 
-        double resX = valFir[0] + valSec[0];
-        double resY = valFir[1] + valSec[1];
+        prevTime[1] = prevTime[0];
+        prevTime[0] = cntTime * dt;
 
-        /**Создание вектора*/
-        Vector vector = new Vector();
-        //Амплитуда вектора
-        vector.getMag().getFloatVal().setValue(
-                Math.sqrt(Math.pow(resX, 2) + Math.pow(resY, 2))
-        );
-        //Фаза вектора
-        vector.getAng().getFloatVal().setValue(
-                Math.atan(resY / resX) * (180 / Math.PI)
-        );
-        return vector;
-    }
-
-    /**
-     * Возвращает длины вектора по оси x и по оси y
-     */
-    public double[] vectorRotation(CMV val, int degree) {
-        double[] massVal = new double[2];
-        /**Расчет проекций вектора на оси*/
-        //X
-        massVal[0] = val.getInstCVal().getMag().getFloatVal().getValue() *
-                Math.cos((val.getInstCVal().getAng().getFloatVal().getValue() + degree) * Math.PI
-                        / 180);
-        //Y
-        massVal[1] = val.getInstCVal().getMag().getFloatVal().getValue() *
-                Math.sin((val.getInstCVal().getAng().getFloatVal().getValue() + degree) * Math.PI
-                        / 180);
-        return massVal;
+        if ((previous[0] * previous[1]) < 0) {
+            double zeroT = prevTime[1] + (abs(previous[1]) * (prevTime[0] - prevTime[1])) / abs(previous[0] - previous[1]);
+            zeroTime[1] = zeroTime[0];
+            zeroTime[0] = zeroT;
+            if (!isFirst) {
+                Hz.getInstMag().getFloatVal().setValue(1 / (2 * (zeroTime[0] - zeroTime[1])));
+                isFirst = true;
+                System.out.println(prevTime[0] + "  " + Hz.getInstMag().getFloatVal().getValue());
+                if (Math.abs(1 / Hz.getInstMag().getFloatVal().getValue() - bufSize * dt) > dt / 2) {
+                    bufSize = (int) Math.abs(1 / (Hz.getInstMag().getFloatVal().getValue() * dt));
+                }
+            } else {
+                isFirst = false;
+            }
+        }
     }
 }

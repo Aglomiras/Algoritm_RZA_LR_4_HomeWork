@@ -12,4 +12,7 @@ public class Vector extends MyData {
      */
     private AnalogueValue mag = new AnalogueValue();
     private AnalogueValue ang = new AnalogueValue();
+
+    private AnalogueValue real = new AnalogueValue();
+    private AnalogueValue imag = new AnalogueValue();
 }

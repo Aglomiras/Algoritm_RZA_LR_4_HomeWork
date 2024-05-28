@@ -28,7 +28,7 @@ public class CSWI extends LN {
      */
     private SPS LocKey = new SPS();
     private SPS Loc = new SPS();
-    private ACT OpOpn = new ACT(); //Операция “Разомкнутый выключатель”
+    private ACT opSignal = new ACT(); //Операция “Разомкнутый выключатель”
     private SPS SelOpn = new SPS(); //Выбор “Разомкнутый выключатель”
     private ACT OpCls = new ACT();
     private SPS SelCLs = new SPS(); //Выбор "Замкнутый выключатель"
@@ -54,17 +54,9 @@ public class CSWI extends LN {
 
     @Override
     public void process() {
-        /**Проверяем каждую из ступеней на наличие отключающего сигнала*/
-        for (int i = 0; i < OpOpnList.size(); i++) {
-            if (OpOpnList.get(i).getGeneral().getValue()) {
-                SelOpn.getStVal().setValue(true);
-                SelCLs.getStVal().setValue(false);
-                break;
-            }
-        }
+        OpCls.getGeneral().setValue(opSignal.getGeneral().getValue());
 
-        /**При получении сигнала на отключение, отключает все выключатели фаз*/
-        if (SelOpn.getStVal().getValue()) {
+        if (OpCls.getGeneral().getValue()) {
             Pos.getStValAttribute().setValue(DPC.stVal.OFF);
             PosA.getStValAttribute().setValue(DPC.stVal.OFF);
             PosB.getStValAttribute().setValue(DPC.stVal.OFF);

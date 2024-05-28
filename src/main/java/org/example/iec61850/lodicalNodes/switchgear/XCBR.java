@@ -67,11 +67,21 @@ public class XCBR extends LN {
 
     @Override
     public void process() {
-        if (!Pos.getStValAttribute().getValue().equals(DPC.stVal.OFF) && !BlkOpn.getStVal().getValue()) {
+        // проверка на наличие сигнала на отключение и отсутствие блокировки отключения
+        if (Pos.getStValAttribute().getValue().equals(DPC.stVal.OFF) && Boolean.TRUE.equals(!BlkOpn.getStVal().getValue())) {
             Pos.getStValAttribute().setValue(DPC.stVal.OFF);
+            Loc.getStVal().setValue(true);
+            BlkCls.getStVal().setValue(true);
+            BlkOpn.getStVal().setValue(true);
+
+            // после одного срабатывания ставится блокировка отключения
+        } else if (Boolean.TRUE.equals(BlkOpn.getStVal().getValue())) {
+            Pos.getStValAttribute().setValue(DPC.stVal.OFF);
+            Loc.getStVal().setValue(true);
             BlkCls.getStVal().setValue(true);
         } else {
             Pos.getStValAttribute().setValue(DPC.stVal.ON);
+            Loc.getStVal().setValue(false);
             BlkCls.getStVal().setValue(false);
         }
     }
